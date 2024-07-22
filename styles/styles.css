@@ -225,30 +225,26 @@ main .section.highlight {
   background-color: var(--light-color);
 }
 
-main .Dunkelgruen {
+main .dunkelgruen {
   background-color: #e8eee0;
 }
 
-main .Hellgruen {
+main .hellgruen {
   background-color: #f2f9e8;
 }
 
-main .Gelb {
+main .gelb {
   background-color: #fdfbd8;
 }
 
-main .Orange {
+main .orange {
   background-color: #feeedf;
 }
 
-main .Rot {
+main .rot {
   background-color: #fce5e1;
 }
 
-main .Grau {
+main .grau {
   background-color: #e4e4e4;
-}
-
-main .dunkelgruen {
-  background-color: #e8eee0;
 }
