@@ -224,3 +224,31 @@ main .section.light,
 main .section.highlight {
   background-color: var(--light-color);
 }
+
+main .Dunkelgruen {
+  background-color: #e8eee0;
+}
+
+main .Hellgruen {
+  background-color: #f2f9e8;
+}
+
+main .Gelb {
+  background-color: #fdfbd8;
+}
+
+main .Orange {
+  background-color: #feeedf;
+}
+
+main .Rot {
+  background-color: #fce5e1;
+}
+
+main .Grau {
+  background-color: #e4e4e4;
+}
+
+main .dunkelgruen {
+  background-color: #e8eee0;
+}
