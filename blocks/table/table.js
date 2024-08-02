@@ -1,79 +1,66 @@
-import { fetchPlaceholders, getMetadata } from '../../scripts/aem.js';
-const placeholders = await fetchPlaceholders(getMetadata("locale"));
-
-const { sNo } = placeholders;
-
-async function createTableHeader(table) {
+async function createTableHeader(table, columns) {
   let tr = document.createElement("tr");
-  let sno = document.createElement("th");
-  sno.appendChild(document.createTextNode("Datum"));
-  let name = document.createElement("th");
-  name.appendChild(document.createTextNode("Name"));
-  let betrag = document.createElement("th");
-  betrag.appendChild(document.createTextNode("Betrag"));
-  let lob = document.createElement("th");
-  lob.appendChild(document.createTextNode("Lob"));
-  let gesamt = document.createElement("th");
-  gesamt.appendChild(document.createTextNode("Gesamt"));
-  tr.append(sno, name, betrag, lob, gesamt);
-  table.append(tr);
-}
-
-async function createTableRow(table, row, i) {
-  let tr = document.createElement("tr");
-  let datum = document.createElement("td");
-  datum.appendChild(document.createTextNode(row.Datum));
-  let name = document.createElement("td");
-  name.appendChild(document.createTextNode(row.Name));
-  let betrag = document.createElement("td");
-  betrag.appendChild(document.createTextNode(row.Betrag));
-  let lob = document.createElement("td");
-  lob.appendChild(document.createTextNode(row.Lob));
-  let gesamt = document.createElement("td");
-  gesamt.appendChild(document.createTextNode(row.Gesamt));
-  tr.append(datum, name, betrag, lob, gesamt);
-  table.append(tr);
-}
-
-async function createNameSelect(data) {
-  const uniqueNames = [...new Set(data.map(row => row.Name))];
-  uniqueNames.sort(); // Namen alphabetisch sortieren
-
-  const select = document.createElement('select');
-  select.id = "name-select";
-  select.name = "name";
-  const allOption = document.createElement('option');
-  allOption.textContent = "Alle";
-  allOption.value = "all";
-  select.append(allOption);
-
-  uniqueNames.forEach(name => {
-    const option = document.createElement('option');
-    option.textContent = name;
-    option.value = name;
-    select.append(option);
+  columns.forEach(col => {
+    let th = document.createElement("th");
+    th.appendChild(document.createTextNode(col));
+    tr.appendChild(th);
   });
-
-  const div = document.createElement('div');
-  div.classList.add("name-select");
-  div.append(select);
-  return div;
+  table.appendChild(tr);
 }
 
-async function createTable(jsonURL, filterName = "all") {
+async function createTableRow(table, row, columns) {
+  let tr = document.createElement("tr");
+  columns.forEach(col => {
+    let td = document.createElement("td");
+    td.appendChild(document.createTextNode(row[col] || ""));
+    tr.appendChild(td);
+  });
+  table.appendChild(tr);
+}
+
+async function createTable(jsonURL, filterValue = null, filterColumn = null) {
   const resp = await fetch(jsonURL);
   const json = await resp.json();
   console.log("=====JSON=====>", json);
 
+  if (!json.data || json.data.length === 0) {
+    return document.createTextNode("Keine Daten verfügbar");
+  }
+
   const table = document.createElement('table');
-  createTableHeader(table);
+  const columns = Object.keys(json.data[0]);
+
+  createTableHeader(table, columns);
   json.data.forEach((row, i) => {
-    if (filterName === "all" || row.Name === filterName) {
-      createTableRow(table, row, i + 1);
+    if (!filterValue || (filterColumn && row[filterColumn] === filterValue)) {
+      createTableRow(table, row, columns);
     }
   });
 
   return table;
+}
+
+async function createFilterDropdown(data, column) {
+  const uniqueValues = [...new Set(data.map(row => row[column]))];
+  uniqueValues.sort(); // Optional: Werte sortieren
+
+  const select = document.createElement('select');
+  select.id = `${column}-select`;
+  select.name = column;
+
+  const allOption = document.createElement('option');
+  allOption.textContent = "Alle";
+  allOption.value = "all";
+  select.appendChild(allOption);
+
+  uniqueValues.forEach(value => {
+    const option = document.createElement('option');
+    option.textContent = value;
+    option.value = value;
+    select.appendChild(option);
+  });
+
+  return select;
 }
 
 export default async function decorate(block) {
@@ -85,16 +72,25 @@ export default async function decorate(block) {
     const resp = await fetch(dataLink.href);
     const json = await resp.json();
 
-    parentDiv.append(await createNameSelect(json.data));
-    parentDiv.append(await createTable(dataLink.href));
-    dataLink.replaceWith(parentDiv);
+    if (json.data && json.data.length > 0) {
+      const columns = Object.keys(json.data[0]);
+      const filterDropdown = await createFilterDropdown(json.data, columns[2]); // Beispiel: Filter basierend auf der dritten Spalte
+      parentDiv.appendChild(filterDropdown);
 
-    const dropdown = document.getElementById('name-select');
-    dropdown.addEventListener('change', async () => {
-      const selectedName = dropdown.value;
-      const newTable = await createTable(dataLink.href, selectedName);
-      const oldTable = parentDiv.querySelector('table');
-      oldTable.replaceWith(newTable);
-    });
+      let table = await createTable(dataLink.href);
+      parentDiv.appendChild(table);
+      dataLink.replaceWith(parentDiv);
+
+      filterDropdown.addEventListener('change', async () => {
+        const selectedValue = filterDropdown.value;
+        const filterValue = selectedValue !== "all" ? selectedValue : null;
+        table = await createTable(dataLink.href, filterValue, columns[2]);
+        const oldTable = parentDiv.querySelector('table');
+        oldTable.replaceWith(table);
+      });
+    } else {
+      parentDiv.appendChild(document.createTextNode("Keine Daten verfügbar"));
+      dataLink.replaceWith(parentDiv);
+    }
   }
 }
