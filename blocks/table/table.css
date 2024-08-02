@@ -1,14 +1,40 @@
-.countries table, th {
-    border: 1px solid black;
-    background-color:cornflowerblue;
-}
-.countries table, td {
-    border: 1px solid black;
-    background-color:aliceblue;
+.data-block table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 16px;
+    text-align: left;
 }
 
-.countries .region-select>select{
+.data-block th, .data-block td {
+    border: 1px solid black;
+    padding: 12px;
+    text-align: left;
+}
+
+.data-block th {
+    background-color: cornflowerblue;
+    color: white;
+    font-weight: bold;
+}
+
+.data-block td {
+    background-color: aliceblue;
+}
+
+.data-block .name-select select,
+.data-block .region-select select {
     width: 40%;
     font-size: large;
+    padding: 5px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f9f9f9;
 }
 
+.data-block select:focus {
+    outline: none;
+    border-color: #66afe9;
+    box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+}
